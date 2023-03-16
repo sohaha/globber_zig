@@ -136,11 +136,13 @@ test match {
 }
 
 pub fn order(a: []const u8, b: []const u8) std.math.Order {
+    // Validate the inputs a and b
     if (std.debug.runtime_safety) {
         validate(a) catch unreachable;
         validate(b) catch unreachable;
     }
 
+    // Check if both inputs are "*"
     if (mem.eql(u8, a, "*") and mem.eql(u8, b, "*")) {
         return .eq;
     } else if (mem.eql(u8, a, "*")) {
@@ -149,12 +151,15 @@ pub fn order(a: []const u8, b: []const u8) std.math.Order {
         return .lt;
     }
 
+    // Count the number of "*" in each input
     const count_a = @as(u2, @boolToInt(a[0] == '*')) + @boolToInt(a[a.len - 1] == '*');
     const count_b = @as(u2, @boolToInt(b[0] == '*')) + @boolToInt(b[b.len - 1] == '*');
 
+    // Compare the number of "*" in each input
     if (count_a == 0 and count_b == 0) {
         return .eq;
     } else if (count_a == count_b) {
+        // Compare the length of each input
         return std.math.order(b.len, a.len);
     } else {
         return std.math.order(count_a, count_b);
