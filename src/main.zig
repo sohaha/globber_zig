@@ -2,10 +2,15 @@ const std = @import("std");
 const mem = std.mem;
 
 pub fn validate(glob: []const u8) error{InvalidGlob}!void {
+    // Check the length of the glob
     switch (glob.len) {
+        // Return an error if the length is 0
         0 => return error.InvalidGlob,
+        // Do nothing if the length is 1
         1 => {},
+        // Check if the first two characters are '**' and return an error if they are
         2 => if (glob[0] == '*' and glob[1] == '*') return error.InvalidGlob,
+        // Check if the rest of the characters contain a '*' and return an error if they do
         else => if (mem.indexOfScalar(u8, glob[1 .. glob.len - 1], '*') != null) {
             return error.InvalidGlob;
         },
@@ -42,17 +47,21 @@ test validate {
 }
 
 pub fn match(s: []const u8, glob: []const u8) bool {
+    // Add a runtime safety check
     if (std.debug.runtime_safety) {
         validate(glob) catch unreachable;
     }
 
+    // Check if the length of glob is 1
     if (glob.len == 1) {
         return glob[0] == '*' or mem.eql(u8, s, glob);
     }
 
+    // Check if the first and last characters of glob are '*'
     const suffix_match = glob[0] == '*';
     const prefix_match = glob[glob.len - 1] == '*';
 
+    // Perform different checks based on the result of the previous check
     if (suffix_match and prefix_match) {
         return mem.indexOf(u8, s, glob[1 .. glob.len - 1]) != null;
     } else if (suffix_match) {
